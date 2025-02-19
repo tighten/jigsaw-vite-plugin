@@ -93,11 +93,11 @@ function jigsawBinPath() {
 /**
  * Spawns a child process to run "jigsaw build" with the proper environment.
  */
-function spawnJigsawBuild() {
+function spawnJigsawBuild(quiet = true): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         const bin = jigsawBinPath();
         const envArg = process.env.NODE_ENV === 'development' ? 'local' : process.env.NODE_ENV;
-        const child = spawn(bin, ['build -q', envArg!], { stdio: 'inherit', shell: true });
+        const child = spawn(bin, [`build ${quiet ? '-q' : ''}`, envArg!], { stdio: 'inherit', shell: true });
         child.on('exit', (code) => {
             if (Number(code) > 0) {
                 console.warn('\nJigsaw build failed, see above.');
@@ -148,9 +148,15 @@ function resolveJigsawPlugin(pluginConfig: PluginConfig): JigsawPlugin {
         config: (config) => {
             userConfig = config;
 
+            const suffix = process.env.NODE_ENV === 'development' ? 'local' : process.env.NODE_ENV;
+            const publicDir = `build_${suffix}`;
+
+            const outDir = pluginConfig.outDir;
+
             return {
+                publicDir,
                 build: {
-                    outDir: userConfig.build?.outDir ?? pluginConfig.outDir,
+                    outDir,
                 },
             };
         },
@@ -199,8 +205,7 @@ function resolveJigsawPlugin(pluginConfig: PluginConfig): JigsawPlugin {
 
         async closeBundle() {
             try {
-                console.log('end?');
-                await spawnJigsawBuild();
+                await spawnJigsawBuild(false);
             } catch (error) {
                 console.error('Jigsaw build error:', error);
             }
