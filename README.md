@@ -1,6 +1,6 @@
 # Jigsaw Vite Plugin
 
-[![MIT License](https://img.shields.io/github/license/tightenco/jigsaw-vite-plugin)](https://github.com/tightenco/jigsaw-vite-plugin/blob/main/LICENSE)
+[![MIT License](https://img.shields.io/github/license/tighten/jigsaw-vite-plugin)](https://github.com/tightenco/jigsaw-vite-plugin/blob/main/LICENSE)
 
 > **Warning**
 >
@@ -60,7 +60,7 @@ And then in the head of your `layouts/main.blade.php` file:
 
 ---
 
-`jigsaw-vite-plugin` is a [Vite](https://vite.dev/) plugin for the [Jigsaw](https://github.com/tightenco/jigsaw) static site generator. It watches your Jigsaw site's files and triggers a new build when it detects changes.
+`jigsaw-vite-plugin` is a [Vite](https://vite.dev/) plugin for the [Jigsaw](https://github.com/tighten/jigsaw) static site generator. It watches your Jigsaw site's files and triggers a new build when it detects changes.
 
 ## Installation
 
