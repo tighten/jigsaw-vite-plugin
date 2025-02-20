@@ -145,11 +145,14 @@ function resolveJigsawPlugin(pluginConfig: PluginConfig): JigsawPlugin {
     return {
         name: 'jigsaw',
         enforce: 'post',
-        config: (config) => {
+        config: (config, { command }) => {
             userConfig = config;
+            let publicDir: boolean | string = false;
 
-            const suffix = process.env.NODE_ENV === 'development' ? 'local' : process.env.NODE_ENV;
-            const publicDir = `build_${suffix}`;
+            if (command === 'serve') {
+                const suffix = process.env.NODE_ENV === 'development' ? 'local' : process.env.NODE_ENV;
+                publicDir = `build_${suffix}`;
+            }
 
             const outDir = pluginConfig.outDir;
 
