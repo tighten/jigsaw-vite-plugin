@@ -24,12 +24,12 @@ And then in the head of your `layouts/main.blade.php` file:
 
 ---
 
-`jigsaw-vite-plugin` is a [Vite](https://vite.dev/) plugin for the [Jigsaw](https://github.com/tighten/jigsaw) static site generator. It watches your Jigsaw site's files and triggers a new build when it detects changes.
+`@tighten/jigsaw-vite-plugin` is a [Vite](https://vite.dev/) plugin for the [Jigsaw](https://github.com/tighten/jigsaw) static site generator. It watches your Jigsaw site's files and triggers a new build when it detects changes.
 
 ## Installation
 
 ```sh
-npm install -D jigsaw-vite-plugin
+npm install -D @tighten/jigsaw-vite-plugin
 ```
 
 ## Usage
@@ -38,11 +38,11 @@ Add the plugin to your `vite.config.js` file:
 
 ```js
 import { defineConfig } from 'vite';
-import jigsaw from 'jigsaw-vite-plugin';
+import jigsaw from '@tighten/jigsaw-vite-plugin';
 
 export default defineConfig({
     plugins: [
-        jigsawPlugin({
+        jigsaw({
             input: ['source/_assets/js/main.js', 'source/_assets/css/main.css'],
             refresh: true,
         }),
