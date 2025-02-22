@@ -1,5 +1,5 @@
 {
-    "name": "jigsaw-vite-plugin",
+    "name": "@tighten/jigsaw-vite-plugin",
     "version": "1.0.0",
     "description": "Jigsaw plugin for Vite.",
     "keywords": [

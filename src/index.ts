@@ -51,24 +51,72 @@ const JigsawQueue = new Queue();
 
 type LaravelPluginConfig = Extract<Parameters<typeof laravel>[0], { input: any }>;
 
+type RefreshConfig = {
+    files: string[];
+    ignored: string[];
+    /**
+     * @default 'cwd'
+     */
+    root?: string;
+    /**
+     * @default '*'
+     */
+    always?: boolean;
+    /**
+     * @default 0
+     */
+    delay?: number;
+};
+
+type DefinedRefreshConfig = boolean | Required<RefreshConfig>;
+
 type JigsawPluginConfig = {
+    /**
+     * Jigsaw's source directory.
+     *
+     * @default 'source'
+     */
+    sourceDirectory?: string;
+    /**
+     * The path to the "hot" file.
+     *
+     * @default `${sourceDirectory}/hot`
+     */
+    hotFile?: string;
+    /**
+     * Directory relative from `root` where build output will be placed.
+     * If the directory exists, it will be removed before the build.
+     * It willl replace the `build.outDir` vite config.
+     *
+     * @default `${sourceDirectory}/assets/build`
+     */
     outDir?: string;
-    refresh?: boolean | { files: string[]; ignored: string[] };
+    /**
+     * Configuration for performing new Jigsaw builds and
+     * full page refresh on blade file changes.
+     *
+     * @default false
+     */
+    refresh?: boolean | RefreshConfig;
 };
-type PluginConfig = Pick<LaravelPluginConfig, 'input' | 'detectTls' | 'transformOnServe'> & JigsawPluginConfig;
 
-const defaultWatch = {
-    files: [
-        'config.php',
-        'bootstrap.php',
-        'listeners/**/*.php',
-        'source/**/*.md',
-        'source/**/*.php',
-        'source/**/*.html',
-    ],
+type AvailableLaravelPluginConfig = Pick<LaravelPluginConfig, 'input' | 'detectTls' | 'transformOnServe'>;
 
-    ignored: ['build_**/**', 'cache/**', 'source/**/_tmp/*'],
-};
+type PluginConfig = AvailableLaravelPluginConfig & JigsawPluginConfig;
+
+type DefinedPluginConfig = AvailableLaravelPluginConfig &
+    Required<JigsawPluginConfig> & { refresh: DefinedRefreshConfig };
+
+const defaultWatchFiles = (source: string) => [
+    'config.php',
+    'bootstrap.php',
+    'listeners/**/*.php',
+    `${source}/**/*.md`,
+    `${source}/**/*.php`,
+    `${source}/**/*.html`,
+];
+
+const defaultWatchIgnored = (source: string) => ['build_**/**', 'cache/**', `${source}/**/_tmp/*`];
 
 export function normalizePaths(root: string, path: string | string[]): string[] {
     return (Array.isArray(path) ? path : [path]).map((path) => resolve(root, path)).map(normalizePath);
@@ -116,21 +164,52 @@ export default function jigsaw(config: PluginConfig): [JigsawPlugin, ...Plugin[]
         ...laravel({
             ...config,
             refresh: false,
-            hotFile: 'hot',
+            hotFile: config.hotFile,
         } as LaravelPluginConfig),
         resolveJigsawPlugin(pluginConfig),
         ...resolveJigsawWatcherPlugin(pluginConfig),
     ];
 }
 
-function resolvePluginConfig(config: PluginConfig): PluginConfig {
-    if (config.refresh === true) {
-        config.refresh = { files: defaultWatch.files, ignored: defaultWatch.ignored };
+function resolveRefreshPluginConfig(
+    refreshConfig: PluginConfig['refresh'],
+    sourceDirectory: string,
+): DefinedRefreshConfig {
+    let config: DefinedRefreshConfig = false;
+
+    const defaultRefreshConfig = {
+        files: defaultWatchFiles(sourceDirectory),
+        ignored: defaultWatchIgnored(sourceDirectory),
+        root: process.cwd(),
+        always: true,
+        delay: 0,
+    };
+
+    if (refreshConfig === true) {
+        config = defaultRefreshConfig;
     }
+
+    if (typeof refreshConfig === 'object') {
+        config = {
+            files: refreshConfig.files ?? defaultRefreshConfig.files,
+            ignored: refreshConfig.ignored ?? defaultRefreshConfig.ignored,
+            root: refreshConfig.root ?? defaultRefreshConfig.root,
+            always: refreshConfig.always ?? defaultRefreshConfig.always,
+            delay: refreshConfig.delay ?? defaultRefreshConfig.delay,
+        };
+    }
+    return config;
+}
+
+function resolvePluginConfig(config: PluginConfig): DefinedPluginConfig {
+    const sourceDirectory = config.sourceDirectory ?? 'source';
 
     return {
         ...config,
-        outDir: config.outDir ?? 'source/assets/build',
+        sourceDirectory: sourceDirectory,
+        refresh: resolveRefreshPluginConfig(config.refresh, sourceDirectory),
+        hotFile: config.hotFile ?? `${sourceDirectory}/hot`,
+        outDir: config.outDir ?? `${sourceDirectory}/assets/build`,
     };
 }
 
@@ -138,15 +217,13 @@ interface JigsawPlugin extends Plugin {
     config: (config: UserConfig, env: ConfigEnv) => UserConfig;
 }
 
-function resolveJigsawPlugin(pluginConfig: PluginConfig): JigsawPlugin {
+function resolveJigsawPlugin(pluginConfig: DefinedPluginConfig): JigsawPlugin {
     let resolvedConfig: ResolvedConfig;
-    let userConfig: UserConfig;
 
     return {
         name: 'jigsaw',
         enforce: 'post',
-        config: (config, { command }) => {
-            userConfig = config;
+        config: (_config, { command }) => {
             let publicDir: boolean | string = false;
 
             if (command === 'serve') {
@@ -154,12 +231,10 @@ function resolveJigsawPlugin(pluginConfig: PluginConfig): JigsawPlugin {
                 publicDir = `build_${suffix}`;
             }
 
-            const outDir = pluginConfig.outDir;
-
             return {
                 publicDir,
                 build: {
-                    outDir,
+                    outDir: pluginConfig.outDir,
                 },
             };
         },
@@ -216,14 +291,14 @@ function resolveJigsawPlugin(pluginConfig: PluginConfig): JigsawPlugin {
     };
 }
 
-function resolveJigsawWatcherPlugin(pluginConfig: JigsawPluginConfig): JigsawPlugin[] {
+function resolveJigsawWatcherPlugin(pluginConfig: DefinedPluginConfig): JigsawPlugin[] {
     if (typeof pluginConfig.refresh !== 'object') {
         return [];
     }
-    const { root = process.cwd(), log = true, always = true, delay = 0 } = {};
 
-    const files = normalizePaths(root, pluginConfig.refresh.files);
-    const ignored = normalizePaths(root, pluginConfig.refresh.ignored);
+    const refreshConfig = pluginConfig.refresh;
+    const files = normalizePaths(refreshConfig.root, refreshConfig.files);
+    const ignored = normalizePaths(refreshConfig.root, refreshConfig.ignored);
     const shouldReload = picomatch(files);
 
     return [
@@ -247,15 +322,15 @@ function resolveJigsawWatcherPlugin(pluginConfig: JigsawPluginConfig): JigsawPlu
 
                         setTimeout(() => {
                             server.config.logger.info(
-                                `${colors.green('full reload')} for ${colors.dim(relative(root, path))} - build: ${Math.round(end - start)} ms`,
+                                `${colors.green('full reload')} for ${colors.dim(relative(refreshConfig.root, path))} - build: ${Math.round(end - start)} ms`,
                                 {
                                     timestamp: true,
                                     clear: true,
                                 },
                             );
 
-                            server.ws.send({ type: 'full-reload', path: always ? '*' : path });
-                        }, delay);
+                            server.ws.send({ type: 'full-reload', path: refreshConfig.always ? '*' : path });
+                        }, refreshConfig.delay);
                     }
                 };
 
@@ -267,7 +342,7 @@ function resolveJigsawWatcherPlugin(pluginConfig: JigsawPluginConfig): JigsawPlu
                 server.watcher.on('change', checkReload);
             },
 
-            handleHotUpdate({ file: path, server, modules }) {
+            handleHotUpdate({ file: path, modules }) {
                 if (shouldReload(path)) {
                     return [];
                 }

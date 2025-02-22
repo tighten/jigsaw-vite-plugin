@@ -8,54 +8,18 @@
 
 ## Alpha notes
 
-Currently we'll also need to add the following to the `bootstrap.php` file:
+You'll want to ensure you install the following version of Jigsaw:
 
-```php
-function vite_tags(array $assets = []): HtmlString
-{
-    $dev = false;
-    try {
-        $url = './hot';
-        $dev = file_get_contents($url);
-    } catch (Exception $e) {
-    }
-
-    if ($dev) {
-        $devServerUrl = $dev;
-
-        return new HtmlString(<<<HTML
-            <script type="module" src="{$devServerUrl}/@vite/client"></script>
-            <link rel="stylesheet" href="{$devServerUrl}/source/_assets/css/main.css">
-            <script type="module" src="{$devServerUrl}/source/_assets/js/main.js"></script>
-        HTML);
-    }
-
-    $manifestPath = __DIR__ . '/source/assets/build/manifest.json';
-
-    if (! file_exists($manifestPath)) {
-        throw new Exception('The Vite manifest does not exist. Please run `npm run build` first or start the dev server.');
-    }
-
-    $manifest = json_decode(file_get_contents($manifestPath), true);
-
-    if (! isset($manifest['source/_assets/js/main.js'])) {
-        throw new Exception('Main entry point not found in Vite manifest.');
-    }
-
-    $entry = $manifest['source/_assets/js/main.js'];
-    $css = $manifest['source/_assets/css/main.css'];
-
-    return new HtmlString(<<<HTML
-        <link rel="stylesheet" href="/assets/build/{$css['file']}">
-        <script type="module" src="/assets/build/{$entry['file']}"></script>
-    HTML);
-}
+```sh
+composer require tightenco/jigsaw:dev-gc/add-vite
 ```
 
 And then in the head of your `layouts/main.blade.php` file:
 
 ```php
-{!! vite_tags() !!}
+@viteRefresh()
+<link rel="stylesheet" href="{{ vite('source/_assets/css/main.css') }}">
+<script defer type="module" src="{{ vite('source/_assets/js/main.js') }}"></script>
 ```
 
 ---
