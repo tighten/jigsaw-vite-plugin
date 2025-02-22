@@ -208,7 +208,7 @@ function resolvePluginConfig(config: PluginConfig): DefinedPluginConfig {
         ...config,
         sourceDirectory: sourceDirectory,
         refresh: resolveRefreshPluginConfig(config.refresh, sourceDirectory),
-        hotFile: config.hotFile ?? `${sourceDirectory}/hot`,
+        hotFile: config.hotFile ?? `./${sourceDirectory}/hot`,
         outDir: config.outDir ?? `${sourceDirectory}/assets/build`,
     };
 }
