@@ -141,13 +141,13 @@ function jigsawBinPath() {
 /**
  * Spawns a child process to run "jigsaw build" with the proper environment.
  */
-function spawnJigsawBuild(hotFile: string, quiet = true): Promise<void> {
+function spawnJigsawBuild(hotFile: null | string = null, quiet = true): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         const bin = jigsawBinPath();
         const envArg = process.env.NODE_ENV === 'development' ? 'local' : process.env.NODE_ENV;
 
         // Remove the hot file when building for non-local environments
-        if (envArg !== "local" && existsSync(hotFile)) {
+        if (hotFile && existsSync(hotFile)) {
             try {
                 unlinkSync(hotFile);
             } catch (e) {
@@ -255,7 +255,7 @@ function resolveJigsawPlugin(pluginConfig: DefinedPluginConfig): JigsawPlugin {
 
         configureServer(server) {
             // Trigger the initial build on server start.
-            spawnJigsawBuild(pluginConfig.hotFile)
+            spawnJigsawBuild()
                 .then(() => {
                     server.config.logger.info(`\n  ${colors.green('Initial Jigsaw build completed.')}`);
                 })
@@ -326,7 +326,7 @@ function resolveJigsawWatcherPlugin(pluginConfig: DefinedPluginConfig): JigsawPl
                     if (shouldReload(path)) {
                         const start = performance.now();
 
-                        await JigsawQueue.enqueue(() => spawnJigsawBuild(pluginConfig.hotFile));
+                        await JigsawQueue.enqueue(() => spawnJigsawBuild());
 
                         const end = performance.now();
 
