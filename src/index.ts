@@ -146,8 +146,8 @@ function spawnJigsawBuild(hotFile: string, quiet = true): Promise<void> {
         const bin = jigsawBinPath();
         const envArg = process.env.NODE_ENV === 'development' ? 'local' : process.env.NODE_ENV;
 
-        // Remove the hotFile if it exists
-        if (process.env.NODE_ENV !== "development" && existsSync(hotFile)) {
+        // Remove the hot file when building for non-local environments
+        if (envArg !== "local" && existsSync(hotFile)) {
             try {
                 unlinkSync(hotFile);
             } catch (e) {
