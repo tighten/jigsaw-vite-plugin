@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { spawn } from 'child_process';
 import { resolve, relative, join } from 'path';
 import { fileURLToPath } from 'url';
@@ -141,10 +141,20 @@ function jigsawBinPath() {
 /**
  * Spawns a child process to run "jigsaw build" with the proper environment.
  */
-function spawnJigsawBuild(quiet = true): Promise<void> {
+function spawnJigsawBuild(hotFile: null | string = null, quiet = true): Promise<void> {
     return new Promise<void>((resolve, reject) => {
         const bin = jigsawBinPath();
         const envArg = process.env.NODE_ENV === 'development' ? 'local' : process.env.NODE_ENV;
+
+        // Remove the hot file when building for non-local environments
+        if (hotFile && existsSync(hotFile)) {
+            try {
+                unlinkSync(hotFile);
+            } catch (e) {
+                console.warn(`Could not remove hot file at ${hotFile}:`, e);
+            }
+        }
+
         const child = spawn(bin, [`build ${quiet ? '-q' : ''}`, envArg!], { stdio: 'inherit', shell: true });
         child.on('exit', (code) => {
             if (Number(code) > 0) {
@@ -283,7 +293,7 @@ function resolveJigsawPlugin(pluginConfig: DefinedPluginConfig): JigsawPlugin {
 
         async closeBundle() {
             try {
-                await spawnJigsawBuild(false);
+                await spawnJigsawBuild(pluginConfig.hotFile, false);
             } catch (error) {
                 console.error('Jigsaw build error:', error);
             }
