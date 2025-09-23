@@ -34,22 +34,22 @@
     },
     "dependencies": {
         "hasbin": "^1.2.3",
-        "laravel-vite-plugin": "^1.2.0",
+        "laravel-vite-plugin": "^2.0.0",
         "picocolors": "^1.0.0",
         "picomatch": "^2.3.1"
     },
     "devDependencies": {
         "@types/hasbin": "^1.2.2",
-        "@types/node": "^18.11.9",
+        "@types/node": "^20.19.0 || >=22.12.0",
         "@types/picomatch": "^2.3.0",
         "esbuild": "0.16.10",
         "prettier": "^3.5.1",
-        "typescript": "^4.6.4",
-        "vite": "^6.0.0",
-        "vitest": "^0.34.4"
+        "typescript": "^5.9.2",
+        "vite": "^7.0.0",
+        "vitest": "^3.2.4"
     },
     "peerDependencies": {
-        "vite": "^5.0.0 || ^6.0.0"
+        "vite": "^7.0.0"
     },
     "engines": {
         "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
