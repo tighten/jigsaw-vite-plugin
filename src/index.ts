@@ -108,15 +108,15 @@ type DefinedPluginConfig = AvailableLaravelPluginConfig &
     Required<JigsawPluginConfig> & { refresh: DefinedRefreshConfig };
 
 const defaultWatchFiles = (source: string) => [
-    'config.php',
-    'bootstrap.php',
-    'listeners/**/*.php',
-    `${source}/**/*.md`,
-    `${source}/**/*.php`,
-    `${source}/**/*.html`,
+    '**/config.php',
+    '**/bootstrap.php',
+    '**/listeners/**/*.php',
+    `**/${source}/**/*.md`,
+    `**/${source}/**/*.php`,
+    `**/${source}/**/*.html`,
 ];
 
-const defaultWatchIgnored = (source: string) => ['build_**/**', 'cache/**', `${source}/**/_tmp/*`];
+const defaultWatchIgnored = (source: string) => ['**/build_**/**', '**/cache/**', `**/${source}/**/_tmp/*`];
 
 export function normalizePaths(root: string, path: string | string[]): string[] {
     return (Array.isArray(path) ? path : [path]).map((path) => resolve(root, path)).map(normalizePath);
