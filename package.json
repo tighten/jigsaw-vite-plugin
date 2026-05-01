@@ -1,6 +1,6 @@
 {
     "name": "@tighten/jigsaw-vite-plugin",
-    "version": "1.0.2",
+    "version": "2.0.0",
     "description": "Jigsaw plugin for Vite.",
     "keywords": [
         "jigsaw",
@@ -29,17 +29,14 @@
         "build": "npm run build-plugin",
         "build-plugin": "rm -rf dist && npm run build-plugin-types && npm run build-plugin-esm && cp src/dev-server-index.html dist/",
         "build-plugin-types": "tsc --emitDeclarationOnly",
-        "build-plugin-esm": "esbuild src/index.ts --platform=node --format=esm --outfile=dist/index.js",
+        "build-plugin-esm": "esbuild src/*.ts --platform=node --format=esm --outdir=dist",
         "test": "vitest run"
     },
     "dependencies": {
-        "hasbin": "^1.2.3",
-        "laravel-vite-plugin": "^1.2.0",
         "picocolors": "^1.0.0",
         "picomatch": "^2.3.1"
     },
     "devDependencies": {
-        "@types/hasbin": "^1.2.2",
         "@types/node": "^18.11.9",
         "@types/picomatch": "^2.3.0",
         "esbuild": "0.16.10",
@@ -49,7 +46,7 @@
         "vitest": "^0.34.4"
     },
     "peerDependencies": {
-        "vite": "^5.0.0 || ^6.0.0"
+        "vite": "^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0"
     },
     "engines": {
         "node": "^18.0.0 || ^20.0.0 || >=22.0.0"
