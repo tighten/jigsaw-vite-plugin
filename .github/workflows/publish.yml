@@ -15,15 +15,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      # Node 24 LTS bundles npm 11.17+, which satisfies the npm >= 11.5.1
+      # requirement for OIDC trusted publishing.
       - uses: actions/setup-node@v6
         with:
-          node-version: '22.14.0'
+          node-version: '24'
           cache: npm
           registry-url: https://registry.npmjs.org
-
-      # Ensure npm 11.5.1 or later is installed
-      - name: Update npm
-        run: npm install -g npm@latest
 
       - name: Install dependencies
         run: npm install
